@@ -10,7 +10,7 @@ pub enum LexerError {
 
 #[derive(Debug)]
 pub struct Lexer<'a> {
-    input_iter: Peekable<Chars<'a>>,
+    pub(crate) input_iter: Peekable<Chars<'a>>,
 }
 
 impl<'a> Lexer<'a> {
@@ -25,7 +25,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Advances the iterator on the input.
-    fn advance(&mut self) {
+    pub(crate) fn advance(&mut self) {
         self.input_iter.next();
     }
 
@@ -37,58 +37,38 @@ impl<'a> Lexer<'a> {
                 self.advance();
                 Some(Token {
                     token_type: TokenType::Lbrace,
-                    token_literal: Some(String::from("{")),
                 })
             }
             Some('}') => {
                 self.advance();
                 Some(Token {
                     token_type: TokenType::Rbrace,
-                    token_literal: Some(String::from("}")),
                 })
             }
             Some(':') => {
                 self.advance();
                 Some(Token {
                     token_type: TokenType::Colon,
-                    token_literal: Some(String::from(":")),
                 })
             }
             Some(',') => {
                 self.advance();
                 Some(Token {
                     token_type: TokenType::Comma,
-                    token_literal: Some(String::from(",")),
                 })
             }
             Some('"') => {
                 self.advance();
-                let string: String = self.parse_string();
+                //let string: String = self.parse_string();
                 Some(Token {
                     token_type: TokenType::Str,
-                    token_literal: Some(string),
                 })
             }
             None => None,
             _ => Some(Token {
                 token_type: TokenType::Invalid,
-                token_literal: None,
             }),
         }
-    }
-
-    /// Parses a string key or value from the JSON.
-    fn parse_string(&mut self) -> String {
-        let mut string = String::new();
-        while let Some(ch) = self.input_iter.peek() {
-            if ch.eq(&'"') {
-                self.advance();
-                break;
-            }
-            string.push(*ch);
-            self.advance();
-        }
-        string
     }
 
     /// Consumes whitespace in the input stream.

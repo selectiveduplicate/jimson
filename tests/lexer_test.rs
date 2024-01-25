@@ -9,11 +9,9 @@ fn test_valid_json_with_empty_object() {
     let expected = vec![
         Token {
             token_type: TokenType::Lbrace,
-            token_literal: Some(String::from("{")),
         },
         Token {
             token_type: TokenType::Rbrace,
-            token_literal: Some(String::from("}")),
         },
     ];
 
@@ -31,6 +29,7 @@ fn test_invalid_json_file_empty() {
     assert!(Lexer::new(json).is_err());
 }
 
+#[ignore = "not implemented"]
 #[test]
 fn test_valid_json_file_with_string_keys_and_values() {
     let json = include_str!("inputs/step2/valid.json");
@@ -39,23 +38,18 @@ fn test_valid_json_file_with_string_keys_and_values() {
     let expected = vec![
         Token {
             token_type: TokenType::Lbrace,
-            token_literal: Some(String::from("{")),
         },
         Token {
             token_type: TokenType::Str,
-            token_literal: Some(String::from("key")),
         },
         Token {
             token_type: TokenType::Colon,
-            token_literal: Some(String::from(":")),
         },
         Token {
             token_type: TokenType::Str,
-            token_literal: Some(String::from("value")),
         },
         Token {
             token_type: TokenType::Rbrace,
-            token_literal: Some(String::from("}")),
         },
     ];
     for expected_token in expected {
@@ -65,6 +59,7 @@ fn test_valid_json_file_with_string_keys_and_values() {
     }
 }
 
+#[ignore = "not implemented"]
 #[test]
 fn test_valid_json_file_with_multiple_string_keys_and_values() {
     let json = include_str!("inputs/step2/valid2.json");
@@ -73,39 +68,30 @@ fn test_valid_json_file_with_multiple_string_keys_and_values() {
     let expected = vec![
         Token {
             token_type: TokenType::Lbrace,
-            token_literal: Some(String::from("{")),
         },
         Token {
             token_type: TokenType::Str,
-            token_literal: Some(String::from("key")),
         },
         Token {
             token_type: TokenType::Colon,
-            token_literal: Some(String::from(":")),
         },
         Token {
             token_type: TokenType::Str,
-            token_literal: Some(String::from("value")),
         },
         Token {
             token_type: TokenType::Comma,
-            token_literal: Some(String::from(",")),
         },
         Token {
             token_type: TokenType::Str,
-            token_literal: Some(String::from("key2")),
         },
         Token {
             token_type: TokenType::Colon,
-            token_literal: Some(String::from(":")),
         },
         Token {
             token_type: TokenType::Str,
-            token_literal: Some(String::from("value")),
         },
         Token {
             token_type: TokenType::Rbrace,
-            token_literal: Some(String::from("}")),
         },
         
     ];

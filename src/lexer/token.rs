@@ -14,5 +14,4 @@ pub enum TokenType {
 /// The token is identified by its `TokenType` and its string form.
 pub struct Token {
     pub token_type: TokenType,
-    pub token_literal: Option<String>,
 }
