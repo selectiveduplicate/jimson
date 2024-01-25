@@ -69,10 +69,7 @@ impl<'a> Lexer<'a> {
                     token_literal: Some(string),
                 })
             }
-            None => Some(Token {
-                token_type: TokenType::Eof,
-                token_literal: None,
-            }),
+            None => None,
             _ => Some(Token {
                 token_type: TokenType::Invalid,
                 token_literal: None,

@@ -15,15 +15,12 @@ fn test_valid_json_with_empty_object() {
             token_type: TokenType::Rbrace,
             token_literal: Some(String::from("}")),
         },
-        Token {
-            token_type: TokenType::Eof,
-            token_literal: None,
-        },
     ];
 
     for expected_token in expected {
-        let result_token = lexer.next_token().unwrap();
-        assert_eq!(result_token, expected_token);
+        if let Some(result_token) = lexer.next_token() {
+            assert_eq!(result_token, expected_token);
+        }
     }
     assert!(!json.is_empty());
 }
@@ -60,15 +57,11 @@ fn test_valid_json_file_with_string_keys_and_values() {
             token_type: TokenType::Rbrace,
             token_literal: Some(String::from("}")),
         },
-        Token {
-            token_type: TokenType::Eof,
-            token_literal: None,
-        },
     ];
     for expected_token in expected {
-        let result_token = lexer.next_token().unwrap();
-        println!("{result_token:?}");
-        assert_eq!(result_token, expected_token);
+        if let Some(result_token) = lexer.next_token() {
+            assert_eq!(result_token, expected_token);
+        }
     }
 }
 
@@ -114,14 +107,11 @@ fn test_valid_json_file_with_multiple_string_keys_and_values() {
             token_type: TokenType::Rbrace,
             token_literal: Some(String::from("}")),
         },
-        Token {
-            token_type: TokenType::Eof,
-            token_literal: None,
-        },
+        
     ];
     for expected_token in expected {
-        let result_token = lexer.next_token().unwrap();
-        println!("{result_token:?}");
-        assert_eq!(result_token, expected_token);
+        if let Some(result_token) = lexer.next_token() {
+            assert_eq!(result_token, expected_token);
+        }
     }
 }

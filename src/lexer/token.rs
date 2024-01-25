@@ -7,7 +7,6 @@ pub enum TokenType {
     Str,
     Colon,
     Invalid,
-    Eof,
 }
 
 #[derive(Debug, PartialEq, Eq)]
