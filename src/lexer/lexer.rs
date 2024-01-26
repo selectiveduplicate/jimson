@@ -6,6 +6,7 @@ type Result<T> = std::result::Result<T, LexerError>;
 #[derive(Debug, Clone)]
 pub enum LexerError {
     EmptyInput,
+    EndOfInput,
 }
 
 #[derive(Debug)]
@@ -27,6 +28,11 @@ impl<'a> Lexer<'a> {
     /// Advances the iterator on the input.
     pub(crate) fn advance(&mut self) {
         self.input_iter.next();
+    }
+
+    /// Peeks at the next character of the input
+    pub(crate) fn peek(&mut self) -> std::result::Result<&char, LexerError> {
+        self.input_iter.peek().ok_or(LexerError::EndOfInput)
     }
 
     /// Produces the next token.

@@ -93,7 +93,6 @@ fn test_valid_json_file_with_multiple_string_keys_and_values() {
         Token {
             token_type: TokenType::Rbrace,
         },
-        
     ];
     for expected_token in expected {
         if let Some(result_token) = lexer.next_token() {
