@@ -8,11 +8,11 @@ use crate::lexer::token::*;
 pub enum ParserError {
     LexerError(LexerError),
     InvalidSyntax,
-    ObjectKeyNotString,
+    StringMissingDoubleQuotes,
     MissingColon,
 }
 
-impl  From<LexerError> for ParserError {
+impl From<LexerError> for ParserError {
     fn from(value: LexerError) -> Self {
         ParserError::LexerError(value)
     }
@@ -73,13 +73,12 @@ impl<'l> Parser<'l> {
             }
         }
         let key = self.parse_string()?;
-        let Some(tok) = self.lexer.next_token() else { return Err(ParserError::InvalidSyntax) ;};
-        //let colon = self.lexer.next_token();
+        let Some(tok) = self.lexer.next_token() else {
+            return Err(ParserError::LexerError(LexerError::EndOfInput));
+        };
         if tok.token_type != TokenType::Colon {
             return Err(ParserError::MissingColon);
-        } else {
-            self.lexer.advance();
-        }
+        } 
         let value = self.parse_string()?;
 
         Ok(JsonValue::Object(Box::new(JsonObject {
@@ -91,20 +90,21 @@ impl<'l> Parser<'l> {
     /// Parses the JSON data.
     pub fn parse(&mut self) -> Result<JsonValue, ParserError> {
         let Some(tok) = self.lexer.next_token() else {
-            todo!()
+            return Err(ParserError::LexerError(LexerError::EndOfInput));
         };
         match tok.token_type {
             TokenType::Lbrace => self.parse_object(),
-            _ => return Err(ParserError::InvalidSyntax),
+            _ => Err(ParserError::InvalidSyntax),
         }
     }
 
     /// Parses a string key or value from the JSON.
     fn parse_string(&mut self) -> Result<JsonValue, ParserError> {
+        self.lexer.skip_whitespace();
         match self.lexer.peek() {
             Ok(ch) => {
                 if *ch != '"' {
-                    return Err(ParserError::ObjectKeyNotString);
+                    return Err(ParserError::StringMissingDoubleQuotes);
                 }
             }
             Err(e) => return Err(ParserError::LexerError(e)),
