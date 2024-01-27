@@ -64,6 +64,7 @@ impl<'l> Parser<'l> {
 
     /// Parses a JSON object.
     fn parse_object(&mut self) -> Result<JsonValue, ParserError> {
+        self.lexer.skip_whitespace();
         if let Ok(ch) = self.lexer.peek() {
             if *ch == '}' {
                 return Ok(JsonValue::Object(Box::new(JsonObject {
