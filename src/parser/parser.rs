@@ -64,8 +64,8 @@ impl<'l> Parser<'l> {
 
     /// Parses a JSON object.
     fn parse_object(&mut self) -> Result<JsonValue, ParserError> {
-        if let Ok(ch) = self.lexer.peek() {
-            if *ch == '}' {
+        if let Some(ch) = self.lexer.peek() {
+            if ch == '}' {
                 return Ok(JsonValue::Object(Box::new(JsonObject {
                     key: None,
                     value: None,
@@ -102,21 +102,21 @@ impl<'l> Parser<'l> {
     fn parse_string(&mut self) -> Result<JsonValue, ParserError> {
         self.lexer.skip_whitespace();
         match self.lexer.peek() {
-            Ok(ch) => {
-                if *ch != '"' {
+            Some(ch) => {
+                if ch != '"' {
                     return Err(ParserError::StringMissingDoubleQuotes);
                 }
             }
-            Err(e) => return Err(ParserError::LexerError(e)),
+            None => return Err(ParserError::LexerError(LexerError::EndOfInput)),
         }
         self.lexer.advance();
         let mut string = String::new();
-        while let Ok(ch) = self.lexer.peek() {
-            if *ch == '"' {
+        while let Some(ch) = self.lexer.peek() {
+            if ch == '"' {
                 self.lexer.advance();
                 break;
             }
-            string.push(*ch);
+            string.push(ch);
             self.lexer.advance();
         }
         Ok(JsonValue::Str(string))

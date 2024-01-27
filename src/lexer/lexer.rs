@@ -31,8 +31,8 @@ impl<'a> Lexer<'a> {
     }
 
     /// Peeks at the next character of the input
-    pub(crate) fn peek(&mut self) -> std::result::Result<&char, LexerError> {
-        self.input_iter.peek().ok_or(LexerError::EndOfInput)
+    pub(crate) fn peek(&mut self) -> Option<char> {
+        self.input_iter.peek().map(|&ch| ch)
     }
 
     /// Produces the next token.
@@ -77,14 +77,10 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Consumes whitespace in the input stream.
+    /// Consumes whitespace in the input and advances the iterator.
     pub(crate) fn skip_whitespace(&mut self) {
-        while let Some(next_ch) = self.input_iter.peek() {
-            if next_ch.is_ascii_whitespace() {
-                self.advance();
-            } else {
-                break;
-            }
+        while self.peek().filter(char::is_ascii_whitespace).is_some() {
+            self.advance();
         }
     }
 
