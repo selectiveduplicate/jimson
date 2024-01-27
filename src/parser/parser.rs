@@ -10,6 +10,7 @@ pub enum ParserError {
     InvalidSyntax,
     MissingColon,
     ObjectKeyNotString,
+    TrailingComma,
 }
 
 impl From<LexerError> for ParserError {
@@ -83,6 +84,11 @@ impl<'l> Parser<'l> {
             return Err(ParserError::MissingColon);
         } 
         let value = self.parse()?;
+
+        match self.lexer.next_token() {
+            Some(tok) if tok.token_type == TokenType::Comma => return Err(ParserError::TrailingComma),
+            _ => {}
+        }
 
         Ok(JsonValue::Object(Box::new(JsonObject {
             key: Some(key),

@@ -27,3 +27,10 @@ fn parse_valid_json_object_with_single_string_key_val_pair() {
     println!("{:?}", result);
     assert!(result.is_ok());
 }
+
+#[test]
+fn parse_invalid_json_object_with_trailing_comma() {
+    let mut json_parser = Parser::new(include_str!("inputs/step2/invalid.json")).unwrap();
+    let result = json_parser.parse();
+    assert!(matches!(result, Err(ParserError::TrailingComma)));
+}
