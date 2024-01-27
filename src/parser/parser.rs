@@ -8,8 +8,8 @@ use crate::lexer::token::*;
 pub enum ParserError {
     LexerError(LexerError),
     InvalidSyntax,
-    StringMissingDoubleQuotes,
     MissingColon,
+    ObjectKeyNotString,
 }
 
 impl From<LexerError> for ParserError {
@@ -42,7 +42,7 @@ pub struct Json {
 #[derive(Debug)]
 pub enum JsonValue {
     Object(Box<JsonObject>),
-    Str(String),
+    String(String),
 }
 
 /// A JSON object.
@@ -51,7 +51,7 @@ pub enum JsonValue {
 /// a `JsonValue` type.
 #[derive(Debug)]
 pub struct JsonObject {
-    key: Option<JsonValue>,
+    key: Option<String>,
     value: Option<JsonValue>,
 }
 
@@ -72,14 +72,17 @@ impl<'l> Parser<'l> {
                 })));
             }
         }
-        let key = self.parse_string()?;
+        let key = match self.parse()? {
+            JsonValue::String(s) => s,
+            _ => return Err(ParserError::ObjectKeyNotString),
+        };
         let Some(tok) = self.lexer.next_token() else {
             return Err(ParserError::LexerError(LexerError::EndOfInput));
         };
         if tok.token_type != TokenType::Colon {
             return Err(ParserError::MissingColon);
         } 
-        let value = self.parse_string()?;
+        let value = self.parse()?;
 
         Ok(JsonValue::Object(Box::new(JsonObject {
             key: Some(key),
@@ -94,6 +97,7 @@ impl<'l> Parser<'l> {
         };
         match tok.token_type {
             TokenType::Lbrace => self.parse_object(),
+            TokenType::Str => self.parse_string(),
             _ => Err(ParserError::InvalidSyntax),
         }
     }
@@ -101,15 +105,15 @@ impl<'l> Parser<'l> {
     /// Parses a string key or value from the JSON.
     fn parse_string(&mut self) -> Result<JsonValue, ParserError> {
         self.lexer.skip_whitespace();
-        match self.lexer.peek() {
-            Some(ch) => {
-                if ch != '"' {
-                    return Err(ParserError::StringMissingDoubleQuotes);
-                }
-            }
-            None => return Err(ParserError::LexerError(LexerError::EndOfInput)),
-        }
-        self.lexer.advance();
+        //match self.lexer.peek() {
+        //    Some(ch) => {
+        //        if ch != '"' {
+        //            return Err(ParserError::StringMissingDoubleQuotes);
+        //        }
+        //    }
+        //    None => return Err(ParserError::LexerError(LexerError::EndOfInput)),
+        //}
+        //self.lexer.advance();
         let mut string = String::new();
         while let Some(ch) = self.lexer.peek() {
             if ch == '"' {
@@ -119,6 +123,6 @@ impl<'l> Parser<'l> {
             string.push(ch);
             self.lexer.advance();
         }
-        Ok(JsonValue::Str(string))
+        Ok(JsonValue::String(string))
     }
 }
