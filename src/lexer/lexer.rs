@@ -78,7 +78,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Consumes whitespace in the input stream.
-    pub(crate) fn skip_whitespace(&mut self) {
+    fn skip_whitespace(&mut self) {
         while let Some(next_ch) = self.input_iter.peek() {
             if next_ch.is_ascii_whitespace() {
                 self.advance();
