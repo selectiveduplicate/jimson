@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::collections::HashMap;
 
 use crate::lexer::lexer::*;
 use crate::lexer::token::*;
@@ -40,9 +41,9 @@ pub struct Json {
 /// 4. A null
 /// 5. An object
 /// 6. An array
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum JsonValue {
-    Object(Box<JsonObject>),
+    Object(HashMap<String, JsonValue>),
     String(String),
 }
 
@@ -67,10 +68,7 @@ impl<'l> Parser<'l> {
     fn parse_object(&mut self) -> Result<JsonValue, ParserError> {
         if let Some(ch) = self.lexer.peek() {
             if ch == '}' {
-                return Ok(JsonValue::Object(Box::new(JsonObject {
-                    key: None,
-                    value: None,
-                })));
+                return Ok(JsonValue::Object(HashMap::new()));
             }
         }
         let key = match self.parse()? {
@@ -82,18 +80,20 @@ impl<'l> Parser<'l> {
         };
         if tok.token_type != TokenType::Colon {
             return Err(ParserError::MissingColon);
-        } 
+        }
         let value = self.parse()?;
 
         match self.lexer.next_token() {
-            Some(tok) if tok.token_type == TokenType::Comma => return Err(ParserError::TrailingComma),
+            Some(tok) if tok.token_type == TokenType::Comma => {
+                return Err(ParserError::TrailingComma)
+            }
             _ => {}
         }
 
-        Ok(JsonValue::Object(Box::new(JsonObject {
-            key: Some(key),
-            value: Some(value),
-        })))
+        let mut obj_store = HashMap::new();
+        obj_store.insert(key, value);
+
+        Ok(JsonValue::Object(obj_store))
     }
 
     /// Parses the JSON data.

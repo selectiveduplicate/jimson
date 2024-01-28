@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use jimson::lexer::lexer::*;
 use jimson::parser::parser::{JsonObject, JsonValue, Parser, ParserError};
 
@@ -17,15 +19,25 @@ fn create_a_new_parser_for_empty_json() {
 #[test]
 fn parse_valid_json_containing_an_empty_object() {
     let mut json_parser = Parser::new(include_str!("inputs/step1/valid.json")).unwrap();
-    assert!(json_parser.parse().is_ok());
+    let result = json_parser.parse();
+    let JsonValue::Object(store) = result.unwrap() else { unreachable!() };
+    assert!(store.is_empty());
 }
 
 #[test]
 fn parse_valid_json_object_with_single_string_key_val_pair() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/valid.json")).unwrap();
     let result = json_parser.parse();
-    println!("{:?}", result);
     assert!(result.is_ok());
+    let JsonValue::Object(store) = result.unwrap() else {
+        unreachable!()
+    };
+    assert_eq!(store.len(), 1);
+    let expected_value = JsonValue::String(String::from("value"));
+    let expected_key = String::from("key");
+    let (result_key, result_value) = store.get_key_value("key").unwrap();
+    assert_eq!(&expected_value, result_value);
+    assert_eq!(&expected_key, result_key);
 }
 
 #[test]
