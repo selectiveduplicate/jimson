@@ -1,7 +1,4 @@
-use std::collections::HashMap;
-
-use jimson::lexer::lexer::*;
-use jimson::parser::parser::{JsonObject, JsonValue, Parser, ParserError};
+use jimson::parser::parser::{JsonValue, Parser, ParserError};
 
 #[test]
 fn create_a_new_parser_for_valid_json() {
@@ -65,4 +62,11 @@ fn parse_valid_json_object_with_multiple_string_key_val_pairs() {
     let (result_key, result_value) = store.get_key_value("key2").unwrap();
     assert_eq!(&expected_value, result_value);
     assert_eq!(&expected_key, result_key);
+}
+
+#[test]
+fn parse_invalid_json_object_with_one_nonstring_key() {
+    let mut json_parser = Parser::new(include_str!("inputs/step2/invalid2.json")).unwrap();
+    let result = json_parser.parse();
+    assert!(matches!(result, Err(ParserError::ObjectKeyNotString)));
 }

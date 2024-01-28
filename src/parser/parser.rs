@@ -73,9 +73,10 @@ impl<'l> Parser<'l> {
         }
         let mut obj_store = HashMap::new();
         loop {
-            let key = match self.parse()? {
-                JsonValue::String(s) => s,
-                _ => return Err(ParserError::ObjectKeyNotString),
+            let key = match self.parse() {
+                Ok(JsonValue::String(s)) => s,
+                Err(_) => return Err(ParserError::ObjectKeyNotString),
+                Ok(_) => unreachable!(),
             };
             let Some(tok) = self.lexer.next_token() else {
                 return Err(ParserError::LexerError(LexerError::EndOfInput));
@@ -89,11 +90,12 @@ impl<'l> Parser<'l> {
             match self.lexer.next_token() {
                 Some(tok) if tok.token_type == TokenType::Comma => {
                     self.lexer.skip_whitespace();
-                    if let Some('"') = self.lexer.peek() {
-                        continue;
-                    } else {
-                        println!("Another key-val pair!!!!");
-                        return Err(ParserError::TrailingComma);
+                    match self.lexer.peek() {
+                        Some('"') => continue,
+                        Some('}') => return Err(ParserError::TrailingComma),
+                        Some(ch) if ch.is_ascii_whitespace() => self.lexer.skip_whitespace(),
+                        Some(ch) if ch.is_ascii_alphabetic() => continue,
+                        _ => return Err(ParserError::TrailingComma),
                     }
                 }
                 Some(tok) if tok.token_type == TokenType::Rbrace => break,
