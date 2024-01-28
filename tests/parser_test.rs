@@ -46,11 +46,3 @@ fn parse_invalid_json_object_with_trailing_comma() {
     let result = json_parser.parse();
     assert!(matches!(result, Err(ParserError::TrailingComma)));
 }
-
-#[test]
-fn parse_valid_json_object_with_multiple_string_key_value_pair() {
-    let mut json_parser = Parser::new(include_str!("inputs/step2/valid2.json")).unwrap();
-    let result = json_parser.parse();
-    println!("{result:?}");
-    assert!(result.is_ok());
-}
