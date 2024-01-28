@@ -71,27 +71,36 @@ impl<'l> Parser<'l> {
                 return Ok(JsonValue::Object(HashMap::new()));
             }
         }
-        let key = match self.parse()? {
-            JsonValue::String(s) => s,
-            _ => return Err(ParserError::ObjectKeyNotString),
-        };
-        let Some(tok) = self.lexer.next_token() else {
-            return Err(ParserError::LexerError(LexerError::EndOfInput));
-        };
-        if tok.token_type != TokenType::Colon {
-            return Err(ParserError::MissingColon);
-        }
-        let value = self.parse()?;
-
-        match self.lexer.next_token() {
-            Some(tok) if tok.token_type == TokenType::Comma => {
-                return Err(ParserError::TrailingComma)
-            }
-            _ => {}
-        }
-
         let mut obj_store = HashMap::new();
-        obj_store.insert(key, value);
+        loop {
+            let key = match self.parse()? {
+                JsonValue::String(s) => s,
+                _ => return Err(ParserError::ObjectKeyNotString),
+            };
+            let Some(tok) = self.lexer.next_token() else {
+                return Err(ParserError::LexerError(LexerError::EndOfInput));
+            };
+            if tok.token_type != TokenType::Colon {
+                return Err(ParserError::MissingColon);
+            }
+            let value = self.parse()?;
+            obj_store.insert(key, value);
+
+            match self.lexer.next_token() {
+                Some(tok) if tok.token_type == TokenType::Comma => {
+                    self.lexer.skip_whitespace();
+                    if let Some('"') = self.lexer.peek() {
+                        continue;
+                    } else {
+                        println!("Another key-val pair!!!!");
+                        return Err(ParserError::TrailingComma);
+                    }
+                }
+                Some(tok) if tok.token_type == TokenType::Rbrace => break,
+                Some(_) => unreachable!(),
+                None => return Err(LexerError::EndOfInput.into()),
+            }
+        }
 
         Ok(JsonValue::Object(obj_store))
     }
