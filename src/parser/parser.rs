@@ -39,6 +39,7 @@ pub struct Parser<'l> {
 pub enum JsonValue {
     Object(HashMap<String, JsonValue>),
     String(String),
+    Boolean(bool),
     Null,
 }
 
@@ -111,6 +112,8 @@ impl<'l> Parser<'l> {
             TokenType::Lbrace => self.parse_object(),
             TokenType::Str => self.parse_string(),
             TokenType::Character('n') => self.parse_null(),
+            TokenType::Character('t') => self.parse_true(),
+            TokenType::Character('f') => self.parse_false(),
             TokenType::Character(_) => Err(ParserError::InvalidJsonValue),
             _ => Err(ParserError::InvalidSyntax),
         }
@@ -138,6 +141,18 @@ impl<'l> Parser<'l> {
     pub fn parse_null(&mut self) -> Result<JsonValue, ParserError> {
         self.read_keyword("null")?;
         Ok(JsonValue::Null)
+    }
+
+    /// Parses the `true` boolean value.
+    pub fn parse_true(&mut self) -> Result<JsonValue, ParserError> {
+        self.read_keyword("true")?;
+        Ok(JsonValue::Boolean(true))
+    }
+
+    /// Parses the `false` boolean value.
+    pub fn parse_false(&mut self) -> Result<JsonValue, ParserError> {
+        self.read_keyword("false")?;
+        Ok(JsonValue::Boolean(false))
     }
 
     /// Parses a string key or value from the JSON.

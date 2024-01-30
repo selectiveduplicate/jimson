@@ -85,3 +85,17 @@ fn parse_valid_json_object_with_null_value() {
     let result = json_parser.parse();
     assert!(result.is_ok());
 }
+
+#[test]
+fn parse_valid_json_object_with_null_and_boolean_values() {
+    let mut json_parser = Parser::new(include_str!("inputs/step3/valid.json")).unwrap();
+    let result = json_parser.parse();
+    assert!(result.is_ok());
+}
+
+#[test]
+fn parse_invalid_json_object_with_invalid_boolean_value() {
+    let mut json_parser = Parser::new(include_str!("inputs/step3/invalid2.json")).unwrap();
+    let result = json_parser.parse();
+    assert!(matches!(result, Err(ParserError::InvalidJsonValue)));
+}
