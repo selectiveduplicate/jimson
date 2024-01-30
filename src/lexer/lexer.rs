@@ -26,8 +26,8 @@ impl<'a> Lexer<'a> {
     }
 
     /// Advances the iterator on the input.
-    pub(crate) fn advance(&mut self) {
-        self.input_iter.next();
+    pub(crate) fn advance(&mut self) -> Option<char> {
+        self.input_iter.next()
     }
 
     /// Peeks at the next character of the input
@@ -73,9 +73,6 @@ impl<'a> Lexer<'a> {
             None => None,
             Some(ch) => Some(Token {
                 token_type: TokenType::Character(*ch)
-            }),
-            _ => Some(Token {
-                token_type: TokenType::Invalid,
             }),
         }
     }

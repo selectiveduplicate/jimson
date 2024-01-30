@@ -1,7 +1,4 @@
-use std::any::Any;
 use std::collections::HashMap;
-use std::error;
-
 use crate::lexer::lexer::*;
 use crate::lexer::token::*;
 
@@ -10,6 +7,7 @@ use crate::lexer::token::*;
 pub enum ParserError {
     LexerError(LexerError),
     InvalidSyntax,
+    InvalidJsonValue,
     MissingColon,
     ObjectKeyNotString,
     TrailingComma,
@@ -26,12 +24,6 @@ impl From<LexerError> for ParserError {
 #[derive(Debug)]
 pub struct Parser<'l> {
     lexer: Lexer<'l>,
-}
-
-/// JSON
-#[derive(Debug)]
-pub struct Json {
-    element: Vec<JsonValue>,
 }
 
 /// A JSON value.
@@ -118,43 +110,33 @@ impl<'l> Parser<'l> {
         match tok.token_type {
             TokenType::Lbrace => self.parse_object(),
             TokenType::Str => self.parse_string(),
-            TokenType::Character(ch) if ch == 'n' => self.parse_null(),
-            TokenType::Character(_) => Err(ParserError::InvalidSyntax),
+            TokenType::Character('n') => self.parse_null(),
+            TokenType::Character(_) => Err(ParserError::InvalidJsonValue),
             _ => Err(ParserError::InvalidSyntax),
         }
     }
 
-    /// Parses the JSON `null` value.
-    pub fn parse_null(&mut self) -> Result<JsonValue, ParserError> {
-        let mut string = String::new();
-        while let Some(ch) = self.lexer.peek() {
-            if ch == 'l' {
-                string.push('l');
-                self.lexer.advance();
-                match self.lexer.peek() {
-                    Some('l') => {
-                        string.push('l');
-                        self.lexer.advance();
-                        break;
-                    }
-                    _ => {
-                        return Err(ParserError::InvalidSyntax);
-                    }
- 
-                }
+    /// Helper function for `parse_null` and 
+    /// `parse_boolean`. Reads null and boolean values.
+    fn read_keyword(&mut self, keyword: &'l str) -> Result<(), ParserError> {
+        for c in keyword.chars() {
+            let Some(current) = self.lexer.advance() else {
+                // We're only doing this since we found the character 'n' in a 
+                // JSON value. Therefore, if the input stream ends before 
+                // we're done comparing, that can only mean an invalid value.
+                return Err(ParserError::InvalidJsonValue);
+            };
+            if current != c {
+                return Err(ParserError::InvalidJsonValue);
             }
-            string.push(ch);
-            self.lexer.advance();
         }
-        if !self.is_null(string) {
-            return Err(ParserError::InvalidSyntax);
-        }
-        Ok(JsonValue::Null)
+        Ok(())
     }
 
-    fn is_null(&self, s: String) -> bool {
-        println!("{s:?}");
-        s == "null"
+    /// Parses the JSON `null` value.
+    pub fn parse_null(&mut self) -> Result<JsonValue, ParserError> {
+        self.read_keyword("null")?;
+        Ok(JsonValue::Null)
     }
 
     /// Parses a string key or value from the JSON.
