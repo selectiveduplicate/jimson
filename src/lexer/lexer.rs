@@ -2,6 +2,15 @@ use crate::lexer::token::*;
 use std::{clone, iter::Peekable, str::Chars};
 
 type Result<T> = std::result::Result<T, LexerError>;
+/// The whitespace characters allowd in JSON according to the 
+/// The IETF JSON standard (RFC): https://datatracker.ietf.org/doc/html/rfc8259.
+/// 
+///
+/// %x20 /              ; Space
+/// %x09 /              ; Horizontal tab
+/// %x0A /              ; Line feed or New line
+/// %x0D )              ; Carriage return
+const WHITESPACES: [char; 4] = ['\u{0020}', '\u{0009}', '\u{000A}', '\u{000D}'];
 
 #[derive(Debug, Clone)]
 pub enum LexerError {
@@ -79,7 +88,7 @@ impl<'a> Lexer<'a> {
 
     /// Consumes whitespace in the input and advances the iterator.
     pub(crate) fn skip_whitespace(&mut self) {
-        while self.peek().filter(char::is_ascii_whitespace).is_some() {
+        while self.peek().filter(|ch| WHITESPACES.contains(ch)).is_some() {
             self.advance();
         }
     }

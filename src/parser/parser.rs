@@ -123,7 +123,8 @@ impl<'l> Parser<'l> {
             let Some(current) = self.lexer.advance() else {
                 // We're only doing this since we found the character 'n' in a 
                 // JSON value. Therefore, if the input stream ends before 
-                // we're done comparing, that can only mean an invalid value.
+                // we're done comparing with `keyword`, 
+                // that can only mean an invalid value.
                 return Err(ParserError::InvalidJsonValue);
             };
             if current != c {
