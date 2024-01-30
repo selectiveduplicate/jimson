@@ -70,3 +70,11 @@ fn parse_invalid_json_object_with_one_nonstring_key() {
     let result = json_parser.parse();
     assert!(matches!(result, Err(ParserError::ObjectKeyNotString)));
 }
+
+#[test]
+fn parse_invalid_json_object_with_missing_brace_or_comma() {
+    let mut json_parser = Parser::new(include_str!("inputs/step2/invalid3.json")).unwrap();
+    let result = json_parser.parse();
+    println!("{result:?}");
+    assert!(matches!(result, Err(ParserError::MissingCurlyBraceOrComma)));
+}

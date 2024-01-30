@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::collections::HashMap;
+use std::error;
 
 use crate::lexer::lexer::*;
 use crate::lexer::token::*;
@@ -12,6 +13,7 @@ pub enum ParserError {
     MissingColon,
     ObjectKeyNotString,
     TrailingComma,
+    MissingCurlyBraceOrComma
 }
 
 impl From<LexerError> for ParserError {
@@ -95,12 +97,12 @@ impl<'l> Parser<'l> {
                         Some('}') => return Err(ParserError::TrailingComma),
                         Some(ch) if ch.is_ascii_whitespace() => self.lexer.skip_whitespace(),
                         Some(ch) if ch.is_ascii_alphabetic() => continue,
-                        _ => return Err(ParserError::TrailingComma),
+                        _ => return Err(ParserError::InvalidSyntax),
                     }
                 }
                 Some(tok) if tok.token_type == TokenType::Rbrace => break,
-                Some(_) => unreachable!(),
-                None => return Err(LexerError::EndOfInput.into()),
+                Some(_) => return Err(ParserError::InvalidSyntax),
+                None => return Err(ParserError::MissingCurlyBraceOrComma),
             }
         }
 
