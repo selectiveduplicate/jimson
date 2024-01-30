@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use crate::lexer::lexer::*;
 use crate::lexer::token::*;
+use std::collections::HashMap;
 
 /// Errors that can occur while parsing JSON data.
 #[derive(Debug, Clone)]
@@ -75,7 +75,7 @@ impl<'l> Parser<'l> {
                 Ok(_) => unreachable!(),
             };
             let Some(tok) = self.lexer.next_token() else {
-                return Err(ParserError::LexerError(LexerError::EndOfInput));
+                return Err(LexerError::EndOfInput)?;
             };
             if tok.token_type != TokenType::Colon {
                 return Err(ParserError::MissingColon);
@@ -106,7 +106,7 @@ impl<'l> Parser<'l> {
     /// Parses the JSON data.
     pub fn parse(&mut self) -> Result<JsonValue, ParserError> {
         let Some(tok) = self.lexer.next_token() else {
-            return Err(ParserError::LexerError(LexerError::EndOfInput));
+            return Err(LexerError::EndOfInput)?;
         };
         match tok.token_type {
             TokenType::Lbrace => self.parse_object(),
@@ -119,14 +119,14 @@ impl<'l> Parser<'l> {
         }
     }
 
-    /// Helper function for `parse_null` and 
+    /// Helper function for `parse_null` and
     /// `parse_boolean`. Reads null and boolean values.
     fn read_keyword(&mut self, keyword: &'l str) -> Result<(), ParserError> {
         for c in keyword.chars() {
             let Some(current) = self.lexer.advance() else {
-                // We're only doing this since we found the character 'n' in a 
-                // JSON value. Therefore, if the input stream ends before 
-                // we're done comparing with `keyword`, 
+                // We're only doing this since we found the character 'n' in a
+                // JSON value. Therefore, if the input stream ends before
+                // we're done comparing with `keyword`,
                 // that can only mean an invalid value.
                 return Err(ParserError::InvalidJsonValue);
             };

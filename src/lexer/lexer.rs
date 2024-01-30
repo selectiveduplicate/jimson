@@ -2,9 +2,9 @@ use crate::lexer::token::*;
 use std::{clone, iter::Peekable, str::Chars};
 
 type Result<T> = std::result::Result<T, LexerError>;
-/// The whitespace characters allowd in JSON according to the 
+/// The whitespace characters allowd in JSON according to the
 /// The IETF JSON standard (RFC): https://datatracker.ietf.org/doc/html/rfc8259.
-/// 
+///
 ///
 /// %x20 /              ; Space
 /// %x09 /              ; Horizontal tab
@@ -74,14 +74,13 @@ impl<'a> Lexer<'a> {
             }
             Some('"') => {
                 self.advance();
-                //let string: String = self.parse_string();
                 Some(Token {
                     token_type: TokenType::Str,
                 })
             }
             None => None,
             Some(ch) => Some(Token {
-                token_type: TokenType::Character(*ch)
+                token_type: TokenType::Character(*ch),
             }),
         }
     }
@@ -91,19 +90,5 @@ impl<'a> Lexer<'a> {
         while self.peek().filter(|ch| WHITESPACES.contains(ch)).is_some() {
             self.advance();
         }
-    }
-
-    /// Parses a number as a string from the input.
-    fn parse_number(&mut self) -> String {
-        let mut number = String::new();
-        while let Some(ch) = self.input_iter.peek() {
-            if ch.is_ascii_digit() {
-                number.push(*ch);
-                self.input_iter.next();
-            } else {
-                break;
-            }
-        }
-        number
     }
 }
