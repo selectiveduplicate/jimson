@@ -78,3 +78,11 @@ fn parse_invalid_json_object_with_missing_brace_or_comma() {
     println!("{result:?}");
     assert!(matches!(result, Err(ParserError::MissingCurlyBraceOrComma)));
 }
+
+#[test]
+fn parse_valid_json_object_with_null_value() {
+    let mut json_parser = Parser::new(include_str!("inputs/step3/valid2.json")).unwrap();
+    let result = json_parser.parse();
+    println!("{result:?}");
+    assert!(result.is_ok());
+}

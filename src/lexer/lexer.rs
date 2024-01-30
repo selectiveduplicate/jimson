@@ -71,6 +71,9 @@ impl<'a> Lexer<'a> {
                 })
             }
             None => None,
+            Some(ch) => Some(Token {
+                token_type: TokenType::Character(*ch)
+            }),
             _ => Some(Token {
                 token_type: TokenType::Invalid,
             }),

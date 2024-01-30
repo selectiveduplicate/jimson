@@ -13,7 +13,7 @@ pub enum ParserError {
     MissingColon,
     ObjectKeyNotString,
     TrailingComma,
-    MissingCurlyBraceOrComma
+    MissingCurlyBraceOrComma,
 }
 
 impl From<LexerError> for ParserError {
@@ -47,6 +47,7 @@ pub struct Json {
 pub enum JsonValue {
     Object(HashMap<String, JsonValue>),
     String(String),
+    Null,
 }
 
 /// A JSON object.
@@ -117,22 +118,48 @@ impl<'l> Parser<'l> {
         match tok.token_type {
             TokenType::Lbrace => self.parse_object(),
             TokenType::Str => self.parse_string(),
+            TokenType::Character(ch) if ch == 'n' => self.parse_null(),
+            TokenType::Character(_) => Err(ParserError::InvalidSyntax),
             _ => Err(ParserError::InvalidSyntax),
         }
+    }
+
+    /// Parses the JSON `null` value.
+    pub fn parse_null(&mut self) -> Result<JsonValue, ParserError> {
+        let mut string = String::new();
+        while let Some(ch) = self.lexer.peek() {
+            if ch == 'l' {
+                string.push('l');
+                self.lexer.advance();
+                match self.lexer.peek() {
+                    Some('l') => {
+                        string.push('l');
+                        self.lexer.advance();
+                        break;
+                    }
+                    _ => {
+                        return Err(ParserError::InvalidSyntax);
+                    }
+ 
+                }
+            }
+            string.push(ch);
+            self.lexer.advance();
+        }
+        if !self.is_null(string) {
+            return Err(ParserError::InvalidSyntax);
+        }
+        Ok(JsonValue::Null)
+    }
+
+    fn is_null(&self, s: String) -> bool {
+        println!("{s:?}");
+        s == "null"
     }
 
     /// Parses a string key or value from the JSON.
     fn parse_string(&mut self) -> Result<JsonValue, ParserError> {
         self.lexer.skip_whitespace();
-        //match self.lexer.peek() {
-        //    Some(ch) => {
-        //        if ch != '"' {
-        //            return Err(ParserError::StringMissingDoubleQuotes);
-        //        }
-        //    }
-        //    None => return Err(ParserError::LexerError(LexerError::EndOfInput)),
-        //}
-        //self.lexer.advance();
         let mut string = String::new();
         while let Some(ch) = self.lexer.peek() {
             if ch == '"' {
