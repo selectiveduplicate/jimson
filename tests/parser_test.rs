@@ -75,7 +75,6 @@ fn parse_invalid_json_object_with_one_nonstring_key() {
 fn parse_invalid_json_object_with_missing_brace_or_comma() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/invalid3.json")).unwrap();
     let result = json_parser.parse();
-    println!("{result:?}");
     assert!(matches!(result, Err(ParserError::MissingCurlyBraceOrComma)));
 }
 
@@ -98,4 +97,11 @@ fn parse_invalid_json_object_with_invalid_boolean_value() {
     let mut json_parser = Parser::new(include_str!("inputs/step3/invalid2.json")).unwrap();
     let result = json_parser.parse();
     assert!(matches!(result, Err(ParserError::InvalidJsonValue)));
+}
+
+#[test]
+fn parse_valid_json_object_with_numbers() {
+    let mut json_parser = Parser::new(include_str!("inputs/step3/valid3.json")).unwrap();
+    let result = json_parser.parse();
+    assert!(result.is_ok());
 }

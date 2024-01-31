@@ -79,9 +79,15 @@ impl<'a> Lexer<'a> {
                 })
             }
             None => None,
-            Some(ch) => Some(Token {
+            Some(ch) if !ch.is_ascii_digit() => Some(Token {
                 token_type: TokenType::Character(*ch),
             }),
+            Some(ch) if ch.is_ascii_digit() => Some(Token {
+                token_type: TokenType::Digit
+            }),
+            Some(_) => Some(Token {
+                token_type: TokenType::Invalid
+            })
         }
     }
 

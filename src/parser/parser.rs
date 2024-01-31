@@ -12,11 +12,18 @@ pub enum ParserError {
     ObjectKeyNotString,
     TrailingComma,
     MissingCurlyBraceOrComma,
+    ParseIntegerError(std::num::ParseIntError),
 }
 
 impl From<LexerError> for ParserError {
     fn from(value: LexerError) -> Self {
         ParserError::LexerError(value)
+    }
+}
+
+impl From<std::num::ParseIntError> for ParserError {
+    fn from(value: std::num::ParseIntError) -> Self {
+        ParserError::ParseIntegerError(value)
     }
 }
 
@@ -40,6 +47,7 @@ pub enum JsonValue {
     Object(HashMap<String, JsonValue>),
     String(String),
     Boolean(bool),
+    Number(u64),
     Null,
 }
 
@@ -114,10 +122,27 @@ impl<'l> Parser<'l> {
             TokenType::Character('n') => self.parse_null(),
             TokenType::Character('t') => self.parse_true(),
             TokenType::Character('f') => self.parse_false(),
+            TokenType::Digit => self.parse_integer(),
             TokenType::Character(_) => Err(ParserError::InvalidJsonValue),
             _ => Err(ParserError::InvalidSyntax),
         }
     }
+
+    /// Parses an integer number value.
+    fn parse_integer(&mut self) -> Result<JsonValue, ParserError> {
+        self.lexer.skip_whitespace();
+        let mut string = String::new();
+        while let Some(ch) = self.lexer.peek() {
+            if !ch.is_digit(10)  {
+                //self.lexer.advance();
+                break;
+            }
+            string.push(ch);
+            self.lexer.advance();
+        }
+        Ok(JsonValue::Number(string.parse()?))
+    }
+
 
     /// Helper function for `parse_null` and
     /// `parse_boolean`. Reads null and boolean values.

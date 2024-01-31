@@ -8,6 +8,7 @@ pub enum TokenType {
     Colon,
     Invalid,
     Character(char),
+    Digit
 }
 
 #[derive(Debug, PartialEq, Eq)]
