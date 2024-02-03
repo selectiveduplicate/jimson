@@ -130,7 +130,6 @@ impl<'l> Parser<'l> {
         }
     }
 
-
     /// Parses an integer number value.
     fn parse_number(&mut self) -> Result<JsonValue, ParserError> {
         self.lexer.skip_whitespace();
