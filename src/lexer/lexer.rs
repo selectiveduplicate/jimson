@@ -1,5 +1,5 @@
-use crate::lexer::token::*;
-use std::{clone, iter::Peekable, str::Chars};
+use super::token::*;
+use std::{iter::Peekable, str::Chars};
 
 type Result<T> = std::result::Result<T, LexerError>;
 /// The whitespace characters allowd in JSON according to the

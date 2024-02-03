@@ -135,7 +135,7 @@ impl<'l> Parser<'l> {
         self.lexer.skip_whitespace();
         let mut string = String::new();
         while let Some(ch) = self.lexer.peek() {
-            if !ch.is_digit(10) && !Self::NUMBER_CONSTRAINTS.contains(&ch) {
+            if !ch.is_ascii_digit() && !Self::NUMBER_CONSTRAINTS.contains(&ch) {
                 //self.lexer.advance();
                 break;
             }
