@@ -96,12 +96,13 @@ fn parse_valid_json_object_with_null_and_boolean_values() {
 fn parse_invalid_json_object_with_invalid_boolean_value() {
     let mut json_parser = Parser::new(include_str!("inputs/step3/invalid2.json")).unwrap();
     let result = json_parser.parse();
-    assert!(matches!(result, Err(ParserError::InvalidJsonValue)));
+    assert!(matches!(result, Err(ParserError::InvalidSyntax)));
 }
 
 #[test]
 fn parse_valid_json_object_with_numbers() {
     let mut json_parser = Parser::new(include_str!("inputs/step3/valid3.json")).unwrap();
     let result = json_parser.parse();
+    println!("{result:?}");
     assert!(result.is_ok());
 }

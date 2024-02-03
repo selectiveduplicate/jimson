@@ -12,7 +12,7 @@ pub enum ParserError {
     ObjectKeyNotString,
     TrailingComma,
     MissingCurlyBraceOrComma,
-    ParseIntegerError(std::num::ParseIntError),
+    ParseNumberError(std::num::ParseFloatError),
 }
 
 impl From<LexerError> for ParserError {
@@ -21,9 +21,9 @@ impl From<LexerError> for ParserError {
     }
 }
 
-impl From<std::num::ParseIntError> for ParserError {
-    fn from(value: std::num::ParseIntError) -> Self {
-        ParserError::ParseIntegerError(value)
+impl From<std::num::ParseFloatError> for ParserError {
+    fn from(value: std::num::ParseFloatError) -> Self {
+        ParserError::ParseNumberError(value)
     }
 }
 
@@ -42,12 +42,12 @@ pub struct Parser<'l> {
 /// 4. A null
 /// 5. An object
 /// 6. An array
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum JsonValue {
     Object(HashMap<String, JsonValue>),
     String(String),
     Boolean(bool),
-    Number(u64),
+    Number(f64),
     Null,
 }
 
@@ -62,6 +62,9 @@ pub struct JsonObject {
 }
 
 impl<'l> Parser<'l> {
+    /// Numbers can be negative, and have decimal point.
+    const NUMBER_CONSTRAINTS: [char; 2] = ['-', '.'];
+
     /// Create a new parser for the JSON data.
     pub fn new(input: &'l str) -> Result<Self, ParserError> {
         let lexer = Lexer::new(input)?;
@@ -122,27 +125,27 @@ impl<'l> Parser<'l> {
             TokenType::Character('n') => self.parse_null(),
             TokenType::Character('t') => self.parse_true(),
             TokenType::Character('f') => self.parse_false(),
-            TokenType::Digit => self.parse_integer(),
-            TokenType::Character(_) => Err(ParserError::InvalidJsonValue),
+            TokenType::Digit | TokenType::Character('-') => self.parse_number(),
             _ => Err(ParserError::InvalidSyntax),
         }
     }
 
+
     /// Parses an integer number value.
-    fn parse_integer(&mut self) -> Result<JsonValue, ParserError> {
+    fn parse_number(&mut self) -> Result<JsonValue, ParserError> {
         self.lexer.skip_whitespace();
         let mut string = String::new();
         while let Some(ch) = self.lexer.peek() {
-            if !ch.is_digit(10)  {
+            if !ch.is_digit(10) && !Self::NUMBER_CONSTRAINTS.contains(&ch) {
                 //self.lexer.advance();
                 break;
             }
             string.push(ch);
             self.lexer.advance();
         }
+        println!("{string:?}");
         Ok(JsonValue::Number(string.parse()?))
     }
-
 
     /// Helper function for `parse_null` and
     /// `parse_boolean`. Reads null and boolean values.
