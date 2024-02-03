@@ -1,5 +1,5 @@
-use jimson::lexer::lexer::Lexer;
-use jimson::lexer::token::*;
+use jimson::lexer::*;
+use jimson::token::*;
 
 #[test]
 fn test_valid_json_with_empty_object() {

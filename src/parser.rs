@@ -1,5 +1,5 @@
-use crate::lexer::lexer::*;
-use crate::lexer::token::*;
+use super::lexer::*;
+use super::token::*;
 use std::collections::HashMap;
 
 /// Errors that can occur while parsing JSON data.

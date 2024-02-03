@@ -1,4 +1,4 @@
-use jimson::Parser;
+use jimson::parser::Parser;
 
 fn main() {
     let json = r#"{

@@ -1,4 +1,4 @@
-use jimson::parser::parser::{JsonValue, Parser, ParserError};
+use jimson::parser::{JsonValue, Parser, ParserError};
 
 #[test]
 fn create_a_new_parser_for_valid_json() {
