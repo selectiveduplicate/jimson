@@ -12,7 +12,7 @@ type Result<T> = std::result::Result<T, LexerError>;
 /// %x0D )              ; Carriage return
 const WHITESPACES: [char; 4] = ['\u{0020}', '\u{0009}', '\u{000A}', '\u{000D}'];
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LexerError {
     EmptyInput,
     EndOfInput,
@@ -21,6 +21,7 @@ pub enum LexerError {
 #[derive(Debug)]
 pub struct Lexer<'a> {
     pub(crate) input_iter: Peekable<Chars<'a>>,
+    pub(crate) line: usize,
 }
 
 impl<'a> Lexer<'a> {
@@ -31,6 +32,7 @@ impl<'a> Lexer<'a> {
         }
         Ok(Self {
             input_iter: input.chars().peekable(),
+            line: 1,
         })
     }
 
@@ -94,7 +96,10 @@ impl<'a> Lexer<'a> {
     /// Consumes whitespace in the input and advances the iterator.
     pub(crate) fn skip_whitespace(&mut self) {
         while self.peek().filter(|ch| WHITESPACES.contains(ch)).is_some() {
-            self.advance();
+            let current = self.advance();
+            if current == Some('\n') {
+                self.line += 1;
+            }
         }
     }
 }

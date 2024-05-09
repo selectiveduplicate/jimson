@@ -1,4 +1,4 @@
-use jimson::parser::{JsonValue, Parser, ParserError};
+use jimson::parser::{JsonValue, Parser};
 
 #[test]
 fn create_a_new_parser_for_valid_json() {
@@ -10,7 +10,10 @@ fn create_a_new_parser_for_valid_json() {
 fn create_a_new_parser_for_empty_json() {
     let json_parser = Parser::new(include_str!("inputs/step1/invalid.json"));
     assert!(json_parser.is_err());
-    assert!(matches!(json_parser, Err(ParserError::LexerError(_))));
+    assert_eq!(
+        json_parser.unwrap_err().message,
+        String::from("empty input")
+    );
 }
 
 #[test]
@@ -43,7 +46,7 @@ fn parse_valid_json_object_with_single_string_key_val_pair() {
 fn parse_invalid_json_object_with_trailing_comma() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/invalid.json")).unwrap();
     let result = json_parser.parse();
-    assert!(matches!(result, Err(ParserError::TrailingComma)));
+    assert!(result.is_err());
 }
 
 #[test]
@@ -67,15 +70,17 @@ fn parse_valid_json_object_with_multiple_string_key_val_pairs() {
 #[test]
 fn parse_invalid_json_object_with_one_nonstring_key() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/invalid2.json")).unwrap();
-    let result = json_parser.parse();
-    assert!(matches!(result, Err(ParserError::ObjectKeyNotString)));
+    let result = json_parser.parse().unwrap_err();
+    assert_eq!(result.line, 3);
+    assert_eq!(result.message, "object key must be string".to_string());
 }
 
 #[test]
 fn parse_invalid_json_object_with_missing_brace_or_comma() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/invalid3.json")).unwrap();
-    let result = json_parser.parse();
-    assert!(matches!(result, Err(ParserError::MissingCurlyBraceOrComma)));
+    let result = json_parser.parse().unwrap_err();
+    assert_eq!(result.line, 2);
+    assert_eq!(result.message, "expected curly brace or comma".to_string());
 }
 
 #[test]
@@ -95,8 +100,9 @@ fn parse_valid_json_object_with_null_and_boolean_values() {
 #[test]
 fn parse_invalid_json_object_with_invalid_boolean_value() {
     let mut json_parser = Parser::new(include_str!("inputs/step3/invalid2.json")).unwrap();
-    let result = json_parser.parse();
-    assert!(matches!(result, Err(ParserError::InvalidSyntax)));
+    let result = json_parser.parse().unwrap_err();
+    assert_eq!(result.line, 3);
+    assert_eq!(result.message, "invalid syntax".to_string());
 }
 
 #[test]
