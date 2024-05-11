@@ -1,7 +1,7 @@
 #[derive(Debug, Clone)]
 pub struct JsonError {
     pub message: String,
-    pub line: usize,
+    pub line: Option<usize>,
 }
 
 //#[derive(Debug, Clone)]
@@ -26,7 +26,11 @@ impl std::fmt::Display for JsonError {
         //    ErrorKind::TrailingComma => format!("line {}: trailing comma", self.line),
         //    ErrorKind::ParseNumberError(_) => format!("line {}: failed to parse number", self.line),
         //};
-        write!(f, "line {}: {}", self.line, self.message)
+        if let Some(line) = self.line {
+            write!(f, "line {}: {}", line, self.message)
+        } else {
+            write!(f, "{}", self.message)
+        }
     }
 }
 

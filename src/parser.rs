@@ -32,11 +32,11 @@ impl<'l> Parser<'l> {
     const NUMBER_CONSTRAINTS: [char; 2] = ['-', '.'];
 
     /// Returns error.
-    pub(crate) fn error<T>(&mut self, msg: String) -> Result<T, JsonError> {
-        return Err(JsonError {
+    fn error<T>(&mut self, msg: String) -> Result<T, JsonError> {
+        Err(JsonError {
             message: msg,
-            line: self.lexer.line,
-        });
+            line: Some(self.lexer.line),
+        })
     }
 
     /// Create a new parser for the JSON data.
@@ -46,12 +46,12 @@ impl<'l> Parser<'l> {
             Err(e) => {
                 if e == LexerError::EmptyInput {
                     return Err(JsonError {
-                        line: 0,
+                        line: None,
                         message: String::from("empty input"),
                     });
                 } else {
                     return Err(JsonError {
-                        line: 0,
+                        line: None,
                         message: String::from("malformed input"),
                     });
                 }
@@ -89,10 +89,10 @@ impl<'l> Parser<'l> {
                     match self.lexer.peek() {
                         Some('"') => continue,
                         Some('}') => {
-                            let msg = format!("trailing comma");
+                            let msg = String::from("trailing comma");
                             return Err(JsonError {
                                 message: msg,
-                                line: self.lexer.line - 1,
+                                line: Some(self.lexer.line - 1),
                             });
                         }
                         Some(ch) if ch.is_ascii_whitespace() => self.lexer.skip_whitespace(),
@@ -121,7 +121,7 @@ impl<'l> Parser<'l> {
             TokenType::Character('t') => self.parse_true(),
             TokenType::Character('f') => self.parse_false(),
             TokenType::Digit | TokenType::Character('-') => self.parse_number(),
-            _ => return self.error(String::from("invalid syntax")),
+            _ => self.error(String::from("invalid syntax")),
         }
     }
 
@@ -164,19 +164,19 @@ impl<'l> Parser<'l> {
     }
 
     /// Parses the JSON `null` value.
-    pub fn parse_null(&mut self) -> Result<JsonValue, JsonError> {
+    fn parse_null(&mut self) -> Result<JsonValue, JsonError> {
         self.read_keyword("null")?;
         Ok(JsonValue::Null)
     }
 
     /// Parses the `true` boolean value.
-    pub fn parse_true(&mut self) -> Result<JsonValue, JsonError> {
+    fn parse_true(&mut self) -> Result<JsonValue, JsonError> {
         self.read_keyword("true")?;
         Ok(JsonValue::Boolean(true))
     }
 
     /// Parses the `false` boolean value.
-    pub fn parse_false(&mut self) -> Result<JsonValue, JsonError> {
+    fn parse_false(&mut self) -> Result<JsonValue, JsonError> {
         self.read_keyword("false")?;
         Ok(JsonValue::Boolean(false))
     }

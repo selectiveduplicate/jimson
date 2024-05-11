@@ -19,14 +19,14 @@ pub enum LexerError {
 }
 
 #[derive(Debug)]
-pub struct Lexer<'a> {
+pub(crate) struct Lexer<'a> {
     pub(crate) input_iter: Peekable<Chars<'a>>,
     pub(crate) line: usize,
 }
 
 impl<'a> Lexer<'a> {
     /// Initializes a new lexer with the given input.
-    pub fn new(input: &'a str) -> Result<Self> {
+    pub(crate) fn new(input: &'a str) -> Result<Self> {
         if input.is_empty() {
             return Err(LexerError::EmptyInput);
         }
@@ -43,11 +43,11 @@ impl<'a> Lexer<'a> {
 
     /// Peeks at the next character of the input
     pub(crate) fn peek(&mut self) -> Option<char> {
-        self.input_iter.peek().map(|&ch| ch)
+        self.input_iter.peek().copied()
     }
 
     /// Produces the next token.
-    pub fn next_token(&mut self) -> Option<Token> {
+    pub(crate) fn next_token(&mut self) -> Option<Token> {
         self.skip_whitespace();
         match self.input_iter.peek() {
             Some('{') => {

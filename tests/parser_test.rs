@@ -71,7 +71,7 @@ fn parse_valid_json_object_with_multiple_string_key_val_pairs() {
 fn parse_invalid_json_object_with_one_nonstring_key() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/invalid2.json")).unwrap();
     let result = json_parser.parse().unwrap_err();
-    assert_eq!(result.line, 3);
+    assert_eq!(result.line.unwrap(), 3);
     assert_eq!(result.message, "object key must be string".to_string());
 }
 
@@ -79,7 +79,7 @@ fn parse_invalid_json_object_with_one_nonstring_key() {
 fn parse_invalid_json_object_with_missing_brace_or_comma() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/invalid3.json")).unwrap();
     let result = json_parser.parse().unwrap_err();
-    assert_eq!(result.line, 2);
+    assert_eq!(result.line.unwrap(), 2);
     assert_eq!(result.message, "expected curly brace or comma".to_string());
 }
 
@@ -101,7 +101,7 @@ fn parse_valid_json_object_with_null_and_boolean_values() {
 fn parse_invalid_json_object_with_invalid_boolean_value() {
     let mut json_parser = Parser::new(include_str!("inputs/step3/invalid2.json")).unwrap();
     let result = json_parser.parse().unwrap_err();
-    assert_eq!(result.line, 3);
+    assert_eq!(result.line.unwrap(), 3);
     assert_eq!(result.message, "invalid syntax".to_string());
 }
 
