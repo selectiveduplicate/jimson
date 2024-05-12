@@ -62,12 +62,12 @@ impl<'l> Parser<'l> {
 
     /// Parses a JSON object.
     fn parse_object(&mut self) -> Result<JsonValue, JsonError> {
-        if let Some(ch) = self.lexer.peek() {
-            if ch == '}' {
-                return Ok(JsonValue::Object(HashMap::new()));
-            }
-        }
         let mut obj_store = HashMap::new();
+
+        if let Some('}') = self.lexer.peek() {
+            self.lexer.advance();
+            return Ok(JsonValue::Object(obj_store));
+        }
         loop {
             let key = match self.parse() {
                 Ok(JsonValue::String(s)) => s,

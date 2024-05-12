@@ -112,3 +112,11 @@ fn parse_valid_json_object_with_numbers() {
     println!("{result:?}");
     assert!(result.is_ok());
 }
+
+#[test]
+fn parse_valid_json_with_object_values() {
+    let mut json_parser = Parser::new(include_str!("inputs/object_values.json")).unwrap();
+    let result = json_parser.parse();
+    assert!(result.is_ok());
+    println!("{:?}", result.unwrap());
+}
