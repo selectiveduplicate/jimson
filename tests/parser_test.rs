@@ -13,10 +13,10 @@ fn create_a_new_parser_for_valid_json() {
 fn create_a_new_parser_for_empty_json() {
     let json_parser = Parser::new(include_str!("inputs/step1/invalid.json"));
     assert!(json_parser.is_err());
-    assert!(matches!(
+    assert_eq!(
         json_parser.unwrap_err().kind,
         ErrorKind::EmptyInput
-    ));
+    );
 }
 
 #[test]
@@ -75,7 +75,7 @@ fn parse_invalid_json_object_with_one_nonstring_key() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/invalid2.json")).unwrap();
     let result = json_parser.parse().unwrap_err();
     assert_eq!(result.line.unwrap(), 3);
-    assert!(matches!(result.kind, ErrorKind::ObjectKeyNotString));
+    assert_eq!(result.kind, ErrorKind::ObjectKeyNotString);
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn parse_invalid_json_object_with_missing_brace_or_comma() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/invalid3.json")).unwrap();
     let result = json_parser.parse().unwrap_err();
     assert_eq!(result.line.unwrap(), 2);
-    assert!(matches!(result.kind, ErrorKind::UnexpectedEof));
+    assert_eq!(result.kind, ErrorKind::UnexpectedEof);
 }
 
 #[test]
@@ -106,7 +106,7 @@ fn parse_invalid_json_object_with_invalid_boolean_value() {
     let result = json_parser.parse().unwrap_err();
     assert_eq!(result.line.unwrap(), 3);
     println!("{}", result);
-    assert!(matches!(result.kind, ErrorKind::InvalidSyntax));
+    assert_eq!(result.kind, ErrorKind::InvalidSyntax);
 }
 
 #[test]

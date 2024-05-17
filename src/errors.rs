@@ -4,7 +4,7 @@ pub struct JsonError {
     pub line: Option<usize>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ErrorKind {
     InvalidSyntax,
     MissingColon,
