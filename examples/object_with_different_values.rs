@@ -12,7 +12,7 @@ fn main() {
     let mut json_parser = Parser::new(json).expect("failed to initialize the parser");
     let parsed = match json_parser.parse() {
         Ok(d) => d,
-        Err(e) => panic!("failed to parse JSON: {e:?}"),
+        Err(e) => panic!("{e:?}"),
     };
     println!("{parsed:?}");
 }

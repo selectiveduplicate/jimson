@@ -1,4 +1,7 @@
-use jimson::parser::{JsonValue, Parser};
+use jimson::{
+    errors::ErrorKind,
+    parser::{JsonValue, Parser},
+};
 
 #[test]
 fn create_a_new_parser_for_valid_json() {
@@ -10,10 +13,10 @@ fn create_a_new_parser_for_valid_json() {
 fn create_a_new_parser_for_empty_json() {
     let json_parser = Parser::new(include_str!("inputs/step1/invalid.json"));
     assert!(json_parser.is_err());
-    assert_eq!(
-        json_parser.unwrap_err().message,
-        String::from("empty input")
-    );
+    assert!(matches!(
+        json_parser.unwrap_err().kind,
+        ErrorKind::EmptyInput
+    ));
 }
 
 #[test]
@@ -72,7 +75,7 @@ fn parse_invalid_json_object_with_one_nonstring_key() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/invalid2.json")).unwrap();
     let result = json_parser.parse().unwrap_err();
     assert_eq!(result.line.unwrap(), 3);
-    assert_eq!(result.message, "object key must be string".to_string());
+    assert!(matches!(result.kind, ErrorKind::ObjectKeyNotString));
 }
 
 #[test]
@@ -80,7 +83,7 @@ fn parse_invalid_json_object_with_missing_brace_or_comma() {
     let mut json_parser = Parser::new(include_str!("inputs/step2/invalid3.json")).unwrap();
     let result = json_parser.parse().unwrap_err();
     assert_eq!(result.line.unwrap(), 2);
-    assert_eq!(result.message, "expected curly brace or comma".to_string());
+    assert!(matches!(result.kind, ErrorKind::UnexpectedEof));
 }
 
 #[test]
@@ -102,7 +105,8 @@ fn parse_invalid_json_object_with_invalid_boolean_value() {
     let mut json_parser = Parser::new(include_str!("inputs/step3/invalid2.json")).unwrap();
     let result = json_parser.parse().unwrap_err();
     assert_eq!(result.line.unwrap(), 3);
-    assert_eq!(result.message, "invalid syntax".to_string());
+    println!("{}", result);
+    assert!(matches!(result.kind, ErrorKind::InvalidSyntax));
 }
 
 #[test]

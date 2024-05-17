@@ -27,36 +27,18 @@ pub enum JsonValue {
     Null,
 }
 
+enum ContinueBreak {
+    Continue,
+    Break,
+}
+
 impl<'l> Parser<'l> {
     /// Numbers can be negative, and have decimal point.
     const NUMBER_CONSTRAINTS: [char; 2] = ['-', '.'];
 
-    /// Returns error.
-    fn error<T>(&mut self, msg: String) -> Result<T, JsonError> {
-        Err(JsonError {
-            message: msg,
-            line: Some(self.lexer.line),
-        })
-    }
-
     /// Create a new parser for the JSON data.
     pub fn new(input: &'l str) -> Result<Self, JsonError> {
-        let lexer = match Lexer::new(input) {
-            Ok(lex) => lex,
-            Err(e) => {
-                if e == LexerError::EmptyInput {
-                    return Err(JsonError {
-                        line: None,
-                        message: String::from("empty input"),
-                    });
-                } else {
-                    return Err(JsonError {
-                        line: None,
-                        message: String::from("malformed input"),
-                    });
-                }
-            }
-        };
+        let lexer = Lexer::new(input)?;
         Ok(Self { lexer })
     }
 
@@ -71,48 +53,69 @@ impl<'l> Parser<'l> {
         loop {
             let key = match self.parse() {
                 Ok(JsonValue::String(s)) => s,
-                Err(_) => return self.error(String::from("object key must be string")),
-                Ok(_) => unreachable!(),
+                Err(_) => {
+                    return Err(JsonError::compose(
+                        ErrorKind::ObjectKeyNotString,
+                        Some(self.lexer.line),
+                    ))
+                }
+                _ => unreachable!(),
             };
             let Some(tok) = self.lexer.next_token() else {
-                return self.error(String::from("end of input"));
+                return Err(JsonError::compose(ErrorKind::Eof, Some(self.lexer.line)));
             };
             if tok.token_type != TokenType::Colon {
-                return self.error(String::from("expected colon"));
+                return Err(JsonError::compose(
+                    ErrorKind::MissingColon,
+                    Some(self.lexer.line),
+                ));
             }
             let value = self.parse()?;
             obj_store.insert(key, value);
 
-            match self.lexer.next_token() {
-                Some(tok) if tok.token_type == TokenType::Comma => {
-                    self.lexer.skip_whitespace();
-                    match self.lexer.peek() {
-                        Some('"') => continue,
-                        Some('}') => {
-                            let msg = String::from("trailing comma");
-                            return Err(JsonError {
-                                message: msg,
-                                line: Some(self.lexer.line - 1),
-                            });
-                        }
-                        Some(ch) if ch.is_ascii_whitespace() => self.lexer.skip_whitespace(),
-                        Some(ch) if ch.is_ascii_alphabetic() => continue,
-                        _ => return self.error(String::from("invalid syntax")),
-                    }
-                }
-                Some(tok) if tok.token_type == TokenType::Rbrace => break,
-                Some(_) => return self.error(String::from("invalid syntax")),
-                None => return self.error(String::from("expected curly brace or comma")),
+            match self.check()? {
+                ContinueBreak::Continue => continue,
+                ContinueBreak::Break => break,
             }
         }
 
         Ok(JsonValue::Object(obj_store))
     }
 
+    fn check(&mut self) -> Result<ContinueBreak, JsonError> {
+        match self.lexer.next_token() {
+            Some(tok) if tok.token_type == TokenType::Comma => {
+                self.lexer.skip_whitespace();
+                match self.lexer.peek() {
+                    Some('"') => Ok(ContinueBreak::Continue),
+                    Some('}') => Err(JsonError::compose(
+                        ErrorKind::TrailingComma,
+                        Some(self.lexer.line),
+                    )),
+                    //Some(ch) if ch.is_ascii_whitespace() => self.lexer.skip_whitespace(),
+                    Some(ch) if ch.is_ascii_alphabetic() => Ok(ContinueBreak::Continue),
+                    _ => Err(JsonError::compose(
+                        ErrorKind::InvalidSyntax,
+                        Some(self.lexer.line),
+                    )),
+                }
+            }
+            Some(tok) if tok.token_type == TokenType::Rbrace => Ok(ContinueBreak::Break),
+            Some(_) => Err(JsonError::compose(
+                ErrorKind::InvalidSyntax,
+                Some(self.lexer.line),
+            )),
+            None => Err(JsonError::compose(
+                ErrorKind::UnexpectedEof,
+                Some(self.lexer.line),
+            )),
+        }
+    }
+
     /// Parses the JSON data.
     pub fn parse(&mut self) -> Result<JsonValue, JsonError> {
         let Some(tok) = self.lexer.next_token() else {
-            return self.error(String::from("end of input"));
+            return Err(JsonError::compose(ErrorKind::Eof, Some(self.lexer.line)));
         };
         match tok.token_type {
             TokenType::Lbrace => self.parse_object(),
@@ -121,7 +124,10 @@ impl<'l> Parser<'l> {
             TokenType::Character('t') => self.parse_true(),
             TokenType::Character('f') => self.parse_false(),
             TokenType::Digit | TokenType::Character('-') => self.parse_number(),
-            _ => self.error(String::from("invalid syntax")),
+            _ => Err(JsonError::compose(
+                ErrorKind::InvalidSyntax,
+                Some(self.lexer.line),
+            )),
         }
     }
 
@@ -138,7 +144,12 @@ impl<'l> Parser<'l> {
             self.lexer.advance();
         }
         let number = match string.parse() {
-            Err(_) => return self.error(String::from("failed to parse number")),
+            Err(e) => {
+                return Err(JsonError::compose(
+                    ErrorKind::ParseNumberError(e),
+                    Some(self.lexer.line),
+                ))
+            }
             Ok(n) => n,
         };
 
@@ -154,10 +165,16 @@ impl<'l> Parser<'l> {
                 // JSON value. Therefore, if the input stream ends before
                 // we're done comparing with `keyword`,
                 // that can only mean an invalid value.
-                return self.error(String::from("invalid JSON value"));
+                return Err(JsonError::compose(
+                    ErrorKind::InvalidSyntax,
+                    Some(self.lexer.line),
+                ));
             };
             if current != c {
-                return self.error(String::from("invalid JSON value"));
+                return Err(JsonError::compose(
+                    ErrorKind::InvalidSyntax,
+                    Some(self.lexer.line),
+                ));
             }
         }
         Ok(())

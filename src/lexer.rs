@@ -1,7 +1,9 @@
+use crate::errors::{ErrorKind, JsonError};
+
 use super::token::*;
 use std::{iter::Peekable, str::Chars};
 
-type Result<T> = std::result::Result<T, LexerError>;
+type Result<T> = std::result::Result<T, JsonError>;
 /// The whitespace characters allowd in JSON according to the
 /// The IETF JSON standard (RFC): https://datatracker.ietf.org/doc/html/rfc8259.
 ///
@@ -11,12 +13,6 @@ type Result<T> = std::result::Result<T, LexerError>;
 /// %x0A /              ; Line feed or New line
 /// %x0D )              ; Carriage return
 const WHITESPACES: [char; 4] = ['\u{0020}', '\u{0009}', '\u{000A}', '\u{000D}'];
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum LexerError {
-    EmptyInput,
-    EndOfInput,
-}
 
 #[derive(Debug)]
 pub(crate) struct Lexer<'a> {
@@ -28,7 +24,7 @@ impl<'a> Lexer<'a> {
     /// Initializes a new lexer with the given input.
     pub(crate) fn new(input: &'a str) -> Result<Self> {
         if input.is_empty() {
-            return Err(LexerError::EmptyInput);
+            return Err(JsonError::compose(ErrorKind::EmptyInput, None));
         }
         Ok(Self {
             input_iter: input.chars().peekable(),
