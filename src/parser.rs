@@ -25,6 +25,7 @@ pub enum JsonValue {
     Boolean(bool),
     Number(f64),
     Null,
+    Array(Vec<JsonValue>),
 }
 
 enum ContinueBreak {
@@ -88,23 +89,20 @@ impl<'l> Parser<'l> {
                 self.lexer.skip_whitespace();
                 match self.lexer.peek() {
                     Some('"') => Ok(ContinueBreak::Continue),
-                    Some('}') => Err(JsonError::compose(
+                    Some('}') | Some(']') => Err(JsonError::compose(
                         ErrorKind::TrailingComma,
                         Some(self.lexer.line),
                     )),
-                    //Some(ch) if ch.is_ascii_whitespace() => self.lexer.skip_whitespace(),
-                    Some(ch) if ch.is_ascii_alphabetic() => Ok(ContinueBreak::Continue),
-                    _ => Err(JsonError::compose(
-                        ErrorKind::InvalidSyntax,
-                        Some(self.lexer.line),
-                    )),
+                    _ => Ok(ContinueBreak::Continue),
                 }
             }
-            Some(tok) if tok.token_type == TokenType::Rbrace => Ok(ContinueBreak::Break),
-            Some(_) => Err(JsonError::compose(
-                ErrorKind::InvalidSyntax,
-                Some(self.lexer.line),
-            )),
+            Some(tok)
+                if tok.token_type == TokenType::Rbrace
+                    || tok.token_type == TokenType::RSqbracket =>
+            {
+                Ok(ContinueBreak::Break)
+            }
+            Some(_) => Ok(ContinueBreak::Continue),
             None => Err(JsonError::compose(
                 ErrorKind::UnexpectedEof,
                 Some(self.lexer.line),
@@ -124,11 +122,31 @@ impl<'l> Parser<'l> {
             TokenType::Character('t') => self.parse_true(),
             TokenType::Character('f') => self.parse_false(),
             TokenType::Digit | TokenType::Character('-') => self.parse_number(),
+            TokenType::LSqBracket => self.parse_array(),
             _ => Err(JsonError::compose(
                 ErrorKind::InvalidSyntax,
                 Some(self.lexer.line),
             )),
         }
+    }
+
+    /// Parses an array
+    fn parse_array(&mut self) -> Result<JsonValue, JsonError> {
+        self.lexer.skip_whitespace();
+        let mut array: Vec<JsonValue> = Vec::new();
+
+        loop {
+            if let Some(']') = self.lexer.peek() {
+                self.lexer.advance();
+                return Ok(JsonValue::Array(array));
+            }
+            array.push(self.parse()?);
+            match self.check()? {
+                ContinueBreak::Continue => continue,
+                ContinueBreak::Break => break,
+            }
+        }
+        Ok(JsonValue::Array(array))
     }
 
     /// Parses an integer number value.

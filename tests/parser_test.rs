@@ -13,10 +13,7 @@ fn create_a_new_parser_for_valid_json() {
 fn create_a_new_parser_for_empty_json() {
     let json_parser = Parser::new(include_str!("inputs/step1/invalid.json"));
     assert!(json_parser.is_err());
-    assert_eq!(
-        json_parser.unwrap_err().kind,
-        ErrorKind::EmptyInput
-    );
+    assert_eq!(json_parser.unwrap_err().kind, ErrorKind::EmptyInput);
 }
 
 #[test]
@@ -122,5 +119,11 @@ fn parse_valid_json_with_object_values() {
     let mut json_parser = Parser::new(include_str!("inputs/object_values.json")).unwrap();
     let result = json_parser.parse();
     assert!(result.is_ok());
-    println!("{:?}", result.unwrap());
+}
+
+#[test]
+fn parse_valid_json_with_array_values() {
+    let mut json_parser = Parser::new(include_str!("inputs/arrays.json")).unwrap();
+    let result = json_parser.parse();
+    assert!(result.is_ok());
 }

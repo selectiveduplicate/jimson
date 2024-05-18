@@ -1,0 +1,9 @@
+{
+    "language": "Rust",
+    "traits": ["safe", "performant", 2020],
+    "year": 2024,
+    "garbage": {
+      "keys": [null, true],
+      "doors": [false, [false, "wood"]]
+    }
+  }

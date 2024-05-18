@@ -3,6 +3,8 @@
 pub enum TokenType {
     Lbrace,
     Rbrace,
+    LSqBracket,
+    RSqbracket,
     Comma,
     Str,
     Colon,
