@@ -7,6 +7,7 @@ pub struct JsonError {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ErrorKind {
     InvalidSyntax,
+    SingleQuote,
     MissingColon,
     ObjectKeyNotString,
     TrailingComma,
@@ -34,6 +35,7 @@ impl std::fmt::Display for JsonError {
             ErrorKind::Eof => "end of input".into(),
             ErrorKind::EmptyInput => "empty input".into(),
             ErrorKind::ParseNumberError(e) => format!("failed to parse number, {}", e),
+            ErrorKind::SingleQuote => "single quote".into(),
         };
         if let Some(line) = self.line {
             write!(f, "error at line {}: {}", line, msg)

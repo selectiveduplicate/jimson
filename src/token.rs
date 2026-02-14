@@ -8,7 +8,7 @@ pub enum TokenType {
     Comma,
     Str,
     Colon,
-    Invalid,
+    InvalidChar(char),
     Character(char),
     Digit,
 }

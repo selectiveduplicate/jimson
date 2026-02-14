@@ -123,6 +123,10 @@ impl<'l> Parser<'l> {
             TokenType::Character('f') => self.parse_false(),
             TokenType::Digit | TokenType::Character('-') => self.parse_number(),
             TokenType::LSqBracket => self.parse_array(),
+            TokenType::InvalidChar('\'') => Err(JsonError::compose(
+                ErrorKind::SingleQuote,
+                Some(self.lexer.line),
+            )),
             _ => Err(JsonError::compose(
                 ErrorKind::InvalidSyntax,
                 Some(self.lexer.line),

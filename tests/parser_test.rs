@@ -123,7 +123,25 @@ fn parse_valid_json_with_object_values() {
 
 #[test]
 fn parse_valid_json_with_array_values() {
-    let mut json_parser = Parser::new(include_str!("inputs/arrays.json")).unwrap();
+    let mut json_parser1 = Parser::new(include_str!("inputs/arrays.json")).unwrap();
+
+    let mut json_parser2 = Parser::new(include_str!("inputs/step4/valid.json")).unwrap();
+    let mut json_parser3 = Parser::new(include_str!("inputs/step4/valid2.json")).unwrap();
+    let result1 = json_parser1.parse();
+    let result2 = json_parser2.parse();
+    let result3 = json_parser3.parse();
+
+    assert!(result1.is_ok());
+    assert!(result2.is_ok());
+    assert!(result3.is_ok());
+}
+
+#[test]
+fn parse_invalid_json_with_array_values() {
+    let mut json_parser = Parser::new(include_str!("inputs/step4/invalid.json")).unwrap();
+
     let result = json_parser.parse();
-    assert!(result.is_ok());
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().kind, ErrorKind::SingleQuote);
 }

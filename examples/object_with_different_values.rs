@@ -6,7 +6,8 @@ fn main() {
         "rust": "awesome",
         "happiness": null,
         "sad": true,
-        "temp": 39.4
+        "temp": 39.4,
+        "another": ['hat']
     }"#;
 
     let mut json_parser = Parser::new(json).expect("failed to initialize the parser");

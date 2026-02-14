@@ -88,6 +88,9 @@ impl<'a> Lexer<'a> {
                     token_type: TokenType::RSqbracket,
                 })
             }
+            Some('\'') => Some(Token {
+                token_type: TokenType::InvalidChar('\''),
+            }),
             None => None,
             Some(ch) if !ch.is_ascii_digit() => Some(Token {
                 token_type: TokenType::Character(*ch),
@@ -95,8 +98,8 @@ impl<'a> Lexer<'a> {
             Some(ch) if ch.is_ascii_digit() => Some(Token {
                 token_type: TokenType::Digit,
             }),
-            Some(_) => Some(Token {
-                token_type: TokenType::Invalid,
+            Some(ch) => Some(Token {
+                token_type: TokenType::InvalidChar(*ch),
             }),
         }
     }
