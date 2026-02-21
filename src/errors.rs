@@ -1,3 +1,5 @@
+use crate::token::TokenType;
+
 #[derive(Debug, Clone)]
 pub struct JsonError {
     pub kind: ErrorKind,
@@ -7,11 +9,15 @@ pub struct JsonError {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ErrorKind {
     InvalidSyntax,
+    NotObjectOrArray,
     SingleQuote,
     MissingColon,
     ObjectKeyNotString,
+    InvalidObjectValueType,
     TrailingComma,
     UnexpectedEof,
+    UnclosedDelimiter(TokenType),
+    MissingValue,
     EmptyInput,
     Eof,
     ParseNumberError(std::num::ParseFloatError),
@@ -36,6 +42,12 @@ impl std::fmt::Display for JsonError {
             ErrorKind::EmptyInput => "empty input".into(),
             ErrorKind::ParseNumberError(e) => format!("failed to parse number, {}", e),
             ErrorKind::SingleQuote => "single quote".into(),
+            ErrorKind::NotObjectOrArray => "not an object or array".into(),
+            ErrorKind::UnclosedDelimiter(_) => {
+                "expected a closing delimiter of an object or array".into()
+            }
+            ErrorKind::MissingValue => "expected value".into(),
+            ErrorKind::InvalidObjectValueType => "invalid object value type".into(),
         };
         if let Some(line) = self.line {
             write!(f, "error at line {}: {}", line, msg)

@@ -7,11 +7,14 @@ fn main() {
         "happiness": null,
         "sad": true,
         "temp": 39.4,
-        "another": ['hat']
+        "another": ["hat"],
     }"#;
+    let json2 = r#"
+        {"invalid expression": 1+2}
+    "#;
 
-    let mut json_parser = Parser::new(json).expect("failed to initialize the parser");
-    let parsed = match json_parser.parse() {
+    let mut json_parser = Parser::new(json2).expect("failed to initialize the parser");
+    let parsed = match json_parser.parse_root() {
         Ok(d) => d,
         Err(e) => panic!("{e:?}"),
     };

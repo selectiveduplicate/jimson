@@ -1,6 +1,7 @@
 use super::errors::*;
 use super::lexer::*;
 use super::token::*;
+
 use std::collections::HashMap;
 
 /// A basic parser for JSON.
@@ -74,7 +75,7 @@ impl<'l> Parser<'l> {
             let value = self.parse()?;
             obj_store.insert(key, value);
 
-            match self.check()? {
+            match self.check_obj()? {
                 ContinueBreak::Continue => continue,
                 ContinueBreak::Break => break,
             }
@@ -83,35 +84,65 @@ impl<'l> Parser<'l> {
         Ok(JsonValue::Object(obj_store))
     }
 
-    fn check(&mut self) -> Result<ContinueBreak, JsonError> {
+    fn check_arr(&mut self) -> Result<ContinueBreak, JsonError> {
         match self.lexer.next_token() {
             Some(tok) if tok.token_type == TokenType::Comma => {
                 self.lexer.skip_whitespace();
                 match self.lexer.peek() {
                     Some('"') => Ok(ContinueBreak::Continue),
-                    Some('}') | Some(']') => Err(JsonError::compose(
+                    Some(']') | Some(',') => Err(JsonError::compose(
                         ErrorKind::TrailingComma,
                         Some(self.lexer.line),
                     )),
                     _ => Ok(ContinueBreak::Continue),
                 }
             }
-            Some(tok)
-                if tok.token_type == TokenType::Rbrace
-                    || tok.token_type == TokenType::RSqbracket =>
-            {
-                Ok(ContinueBreak::Break)
-            }
+            Some(tok) if tok.token_type == TokenType::RSqbracket => Ok(ContinueBreak::Break),
             Some(_) => Ok(ContinueBreak::Continue),
             None => Err(JsonError::compose(
-                ErrorKind::UnexpectedEof,
+                ErrorKind::UnclosedDelimiter(TokenType::RSqbracket),
                 Some(self.lexer.line),
             )),
         }
     }
 
+    fn check_obj(&mut self) -> Result<ContinueBreak, JsonError> {
+        match self.lexer.next_token() {
+            Some(tok) if tok.token_type == TokenType::Comma => {
+                self.lexer.skip_whitespace();
+                match self.lexer.peek() {
+                    Some('"') => Ok(ContinueBreak::Continue),
+                    Some('}') => Err(JsonError::compose(
+                        ErrorKind::TrailingComma,
+                        Some(self.lexer.line),
+                    )),
+                    _ => Ok(ContinueBreak::Continue),
+                }
+            }
+            Some(tok) if tok.token_type == TokenType::Rbrace => Ok(ContinueBreak::Break),
+            Some(_) => Err(JsonError::compose(ErrorKind::InvalidSyntax, Some(self.lexer.line))),
+            None => Err(JsonError::compose(
+                ErrorKind::UnclosedDelimiter(TokenType::Rbrace),
+                Some(self.lexer.line),
+            )),
+        }
+    }
+
+    pub fn parse_root(&mut self) -> Result<JsonValue, JsonError> {
+        self.lexer.skip_whitespace();
+        let value = self.parse()?;
+        self.lexer.skip_whitespace();
+
+        if self.lexer.peek().is_some() {
+            return Err(JsonError::compose(
+                ErrorKind::InvalidSyntax,
+                Some(self.lexer.line),
+            ));
+        }
+        Ok(value)
+    }
     /// Parses the JSON data.
-    pub fn parse(&mut self) -> Result<JsonValue, JsonError> {
+    pub(crate) fn parse(&mut self) -> Result<JsonValue, JsonError> {
         let Some(tok) = self.lexer.next_token() else {
             return Err(JsonError::compose(ErrorKind::Eof, Some(self.lexer.line)));
         };
@@ -144,8 +175,15 @@ impl<'l> Parser<'l> {
                 self.lexer.advance();
                 return Ok(JsonValue::Array(array));
             }
+            if let Some(',') = self.lexer.peek() {
+                self.lexer.advance();
+                return Err(JsonError::compose(
+                    ErrorKind::MissingValue,
+                    Some(self.lexer.line),
+                ));
+            }
             array.push(self.parse()?);
-            match self.check()? {
+            match self.check_arr()? {
                 ContinueBreak::Continue => continue,
                 ContinueBreak::Break => break,
             }

@@ -1,4 +1,4 @@
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 /// The JSON tokens.
 pub enum TokenType {
     Lbrace,
