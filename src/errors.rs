@@ -20,6 +20,8 @@ pub enum ErrorKind {
     MissingValue,
     EmptyInput,
     Eof,
+    NumberWithLeadingZero,
+    InvalidBackslashEscape,
     ParseNumberError(std::num::ParseFloatError),
 }
 
@@ -48,6 +50,8 @@ impl std::fmt::Display for JsonError {
             }
             ErrorKind::MissingValue => "expected value".into(),
             ErrorKind::InvalidObjectValueType => "invalid object value type".into(),
+            ErrorKind::NumberWithLeadingZero => "number cannot begin with zero".into(),
+            ErrorKind::InvalidBackslashEscape => "invalid backslash escape".into(),
         };
         if let Some(line) = self.line {
             write!(f, "error at line {}: {}", line, msg)

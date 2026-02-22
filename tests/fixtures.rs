@@ -38,6 +38,9 @@ fn prepare_test_data_invalids() {
         ("fail9.json", ErrorKind::InvalidSyntax),
         ("fail10.json", ErrorKind::InvalidSyntax),
         ("fail11.json", ErrorKind::InvalidSyntax),
+        ("fail12.json", ErrorKind::NumberWithLeadingZero),
+        ("fail13.json", ErrorKind::NumberWithLeadingZero),
+        ("fail14.json", ErrorKind::InvalidBackslashEscape),
     ]);
 
     for path in test_files.iter() {
@@ -45,7 +48,6 @@ fn prepare_test_data_invalids() {
         let test_data = fs::read_to_string(&path)
             .unwrap_or_else(|e| panic!("failed reading {:?}: {}", path, e));
         let parser = parse_test_json(test_data);
-        dbg!("{:?}", &parser);
         assert!(&parser.unwrap_err().kind == expected.get(fname).unwrap());
     }
 }

@@ -120,7 +120,10 @@ impl<'l> Parser<'l> {
                 }
             }
             Some(tok) if tok.token_type == TokenType::Rbrace => Ok(ContinueBreak::Break),
-            Some(_) => Err(JsonError::compose(ErrorKind::InvalidSyntax, Some(self.lexer.line))),
+            Some(_) => Err(JsonError::compose(
+                ErrorKind::InvalidSyntax,
+                Some(self.lexer.line),
+            )),
             None => Err(JsonError::compose(
                 ErrorKind::UnclosedDelimiter(TokenType::Rbrace),
                 Some(self.lexer.line),
@@ -128,11 +131,15 @@ impl<'l> Parser<'l> {
         }
     }
 
+    /// Parses the JSON document.
     pub fn parse_root(&mut self) -> Result<JsonValue, JsonError> {
+        // Any whitespace in the beginning.
         self.lexer.skip_whitespace();
         let value = self.parse()?;
         self.lexer.skip_whitespace();
 
+        // Parsing the JSON document has finished so there should not be anything
+        // left.
         if self.lexer.peek().is_some() {
             return Err(JsonError::compose(
                 ErrorKind::InvalidSyntax,
@@ -141,7 +148,7 @@ impl<'l> Parser<'l> {
         }
         Ok(value)
     }
-    /// Parses the JSON data.
+
     pub(crate) fn parse(&mut self) -> Result<JsonValue, JsonError> {
         let Some(tok) = self.lexer.next_token() else {
             return Err(JsonError::compose(ErrorKind::Eof, Some(self.lexer.line)));
@@ -194,7 +201,14 @@ impl<'l> Parser<'l> {
     /// Parses an integer number value.
     fn parse_number(&mut self) -> Result<JsonValue, JsonError> {
         self.lexer.skip_whitespace();
+        if let Some('0') = self.lexer.peek() {
+            return Err(JsonError::compose(
+                ErrorKind::NumberWithLeadingZero,
+                Some(self.lexer.line),
+            ));
+        }
         let mut string = String::new();
+
         while let Some(ch) = self.lexer.peek() {
             if !ch.is_ascii_digit() && !Self::NUMBER_CONSTRAINTS.contains(&ch) {
                 //self.lexer.advance();
@@ -260,12 +274,21 @@ impl<'l> Parser<'l> {
 
     /// Parses a string key or value from the JSON.
     fn parse_string(&mut self) -> Result<JsonValue, JsonError> {
+        dbg!("I AM HERE>>>>>");
         self.lexer.skip_whitespace();
         let mut string = String::new();
         while let Some(ch) = self.lexer.peek() {
             if ch == '"' {
                 self.lexer.advance();
                 break;
+            }
+            if ch == '\\' {
+                if let Some('\\') = self.lexer.peek() {
+                    return Err(JsonError::compose(
+                        ErrorKind::InvalidBackslashEscape,
+                        Some(self.lexer.line),
+                    ));
+                }
             }
             string.push(ch);
             self.lexer.advance();
