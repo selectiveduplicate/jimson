@@ -4,10 +4,13 @@ use super::token::*;
 
 use std::collections::HashMap;
 
+const MAX_DEPTH: u8 = 15;
+
 /// A basic parser for JSON.
 #[derive(Debug)]
 pub struct Parser<'l> {
     lexer: Lexer<'l>,
+    depth: u8,
 }
 
 /// A JSON value.
@@ -41,7 +44,7 @@ impl<'l> Parser<'l> {
     /// Create a new parser for the JSON data.
     pub fn new(input: &'l str) -> Result<Self, JsonError> {
         let lexer = Lexer::new(input)?;
-        Ok(Self { lexer })
+        Ok(Self { lexer, depth: 0 })
     }
 
     /// Parses a JSON object.
@@ -50,6 +53,7 @@ impl<'l> Parser<'l> {
 
         if let Some('}') = self.lexer.peek() {
             self.lexer.advance();
+            self.depth -= 1;
             return Ok(JsonValue::Object(obj_store));
         }
         loop {
@@ -154,13 +158,31 @@ impl<'l> Parser<'l> {
             return Err(JsonError::compose(ErrorKind::Eof, Some(self.lexer.line)));
         };
         match tok.token_type {
-            TokenType::Lbrace => self.parse_object(),
+            TokenType::Lbrace => {
+                self.depth += 1;
+                if self.depth > MAX_DEPTH {
+                    return Err(JsonError::compose(
+                        ErrorKind::NestingTooDeep,
+                        Some(self.lexer.line),
+                    ));
+                }
+                self.parse_object()
+            }
             TokenType::Str => self.parse_string(),
             TokenType::Character('n') => self.parse_null(),
             TokenType::Character('t') => self.parse_true(),
             TokenType::Character('f') => self.parse_false(),
             TokenType::Digit | TokenType::Character('-') => self.parse_number(),
-            TokenType::LSqBracket => self.parse_array(),
+            TokenType::LSqBracket => {
+                self.depth += 1;
+                if self.depth > MAX_DEPTH {
+                    return Err(JsonError::compose(
+                        ErrorKind::NestingTooDeep,
+                        Some(self.lexer.line),
+                    ));
+                }
+                self.parse_array()
+            }
             TokenType::InvalidChar('\'') => Err(JsonError::compose(
                 ErrorKind::SingleQuote,
                 Some(self.lexer.line),
@@ -180,6 +202,7 @@ impl<'l> Parser<'l> {
         loop {
             if let Some(']') = self.lexer.peek() {
                 self.lexer.advance();
+                self.depth -= 1;
                 return Ok(JsonValue::Array(array));
             }
             if let Some(',') = self.lexer.peek() {
@@ -274,7 +297,6 @@ impl<'l> Parser<'l> {
 
     /// Parses a string key or value from the JSON.
     fn parse_string(&mut self) -> Result<JsonValue, JsonError> {
-        dbg!("I AM HERE>>>>>");
         self.lexer.skip_whitespace();
         let mut string = String::new();
         while let Some(ch) = self.lexer.peek() {

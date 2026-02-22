@@ -22,6 +22,7 @@ pub enum ErrorKind {
     Eof,
     NumberWithLeadingZero,
     InvalidBackslashEscape,
+    NestingTooDeep,
     ParseNumberError(std::num::ParseFloatError),
 }
 
@@ -52,6 +53,7 @@ impl std::fmt::Display for JsonError {
             ErrorKind::InvalidObjectValueType => "invalid object value type".into(),
             ErrorKind::NumberWithLeadingZero => "number cannot begin with zero".into(),
             ErrorKind::InvalidBackslashEscape => "invalid backslash escape".into(),
+            ErrorKind::NestingTooDeep => "too many nested arrays or objects".into(),
         };
         if let Some(line) = self.line {
             write!(f, "error at line {}: {}", line, msg)

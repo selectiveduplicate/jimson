@@ -41,6 +41,10 @@ fn prepare_test_data_invalids() {
         ("fail12.json", ErrorKind::NumberWithLeadingZero),
         ("fail13.json", ErrorKind::NumberWithLeadingZero),
         ("fail14.json", ErrorKind::InvalidBackslashEscape),
+        ("fail15.json", ErrorKind::InvalidSyntax),
+        ("fail16.json", ErrorKind::InvalidBackslashEscape),
+        ("fail17.json", ErrorKind::NestingTooDeep),
+        ("fail18.json", ErrorKind::MissingColon),
     ]);
 
     for path in test_files.iter() {
